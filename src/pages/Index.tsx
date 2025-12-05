@@ -31,11 +31,14 @@ export default function Index() {
   const [balance, setBalance] = useState(5000);
   const [promoCode, setPromoCode] = useState('');
   const [cart, setCart] = useState<typeof GAMES>([]);
+  const [ownedGames, setOwnedGames] = useState<number[]>([]);
   const [chatOpen, setChatOpen] = useState(false);
   const [chatMessages, setChatMessages] = useState([
     { text: 'Здравствуйте! Чем могу помочь?', from: 'support' }
   ]);
   const [chatInput, setChatInput] = useState('');
+  const [buyDialogOpen, setBuyDialogOpen] = useState(false);
+  const [selectedGame, setSelectedGame] = useState<typeof GAMES[0] | null>(null);
 
   const filteredGames = GAMES.filter(game => {
     const matchesGenre = selectedGenre === 'all' || game.genre === selectedGenre;
@@ -64,12 +67,25 @@ export default function Index() {
   };
 
   const handleBuyGame = (game: typeof GAMES[0]) => {
-    const finalPrice = game.price - (game.price * game.discount / 100);
-    if (balance >= finalPrice) {
+    setSelectedGame(game);
+    setBuyDialogOpen(true);
+  };
+
+  const confirmBuyGame = () => {
+    if (!selectedGame) return;
+    
+    const finalPrice = selectedGame.price - (selectedGame.price * selectedGame.discount / 100);
+    if (selectedGame.price === 0) {
+      setOwnedGames(prev => [...prev, selectedGame.id]);
+      toast.success(`${selectedGame.title} добавлена в вашу библиотеку!`);
+      setBuyDialogOpen(false);
+    } else if (balance >= finalPrice) {
       setBalance(prev => prev - finalPrice);
-      toast.success(`${game.title} куплена за ${finalPrice} ₽`);
+      setOwnedGames(prev => [...prev, selectedGame.id]);
+      toast.success(`${selectedGame.title} куплена за ${finalPrice} ₽!`);
+      setBuyDialogOpen(false);
     } else {
-      toast.error('Недостаточно средств');
+      toast.error('Недостаточно средств. Пополните баланс!');
     }
   };
 
@@ -294,13 +310,23 @@ export default function Index() {
                           {game.price === 0 ? 'FREE' : `${finalPrice} ₽`}
                         </span>
                       </div>
-                      <Button 
-                        onClick={() => handleBuyGame(game)}
-                        disabled={game.price > 0 && balance < finalPrice}
-                        className="group-hover:scale-105 transition-transform"
-                      >
-                        {game.price === 0 ? 'Играть' : 'Купить'}
-                      </Button>
+                      {ownedGames.includes(game.id) ? (
+                        <Button 
+                          variant="outline"
+                          className="group-hover:scale-105 transition-transform"
+                          disabled
+                        >
+                          <Icon name="Check" size={18} className="mr-2" />
+                          Куплено
+                        </Button>
+                      ) : (
+                        <Button 
+                          onClick={() => handleBuyGame(game)}
+                          className="group-hover:scale-105 transition-transform"
+                        >
+                          {game.price === 0 ? 'Играть' : 'Купить'}
+                        </Button>
+                      )}
                     </CardFooter>
                   </Card>
                 );
@@ -440,6 +466,107 @@ export default function Index() {
           </p>
         </div>
       </footer>
+
+      <Dialog open={buyDialogOpen} onOpenChange={setBuyDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-3">
+              <span className="text-4xl">{selectedGame?.image}</span>
+              <div>
+                <div>Подтверждение покупки</div>
+                <div className="text-sm font-normal text-muted-foreground mt-1">
+                  {selectedGame?.title}
+                </div>
+              </div>
+            </DialogTitle>
+          </DialogHeader>
+          
+          {selectedGame && (
+            <div className="space-y-4">
+              <div className="p-4 bg-muted rounded-lg space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground">Жанр:</span>
+                  <Badge variant="outline">{selectedGame.genre}</Badge>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground">Рейтинг:</span>
+                  <div className="flex items-center gap-1">
+                    <Icon name="Star" size={16} className="text-yellow-500 fill-yellow-500" />
+                    <span className="font-bold">{selectedGame.rating}</span>
+                  </div>
+                </div>
+                {selectedGame.discount > 0 && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Скидка:</span>
+                    <Badge className="bg-accent text-accent-foreground">-{selectedGame.discount}%</Badge>
+                  </div>
+                )}
+              </div>
+
+              <div className="p-4 bg-primary/10 rounded-lg border border-primary">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-muted-foreground">Цена:</span>
+                  <div className="flex items-center gap-2">
+                    {selectedGame.discount > 0 && (
+                      <span className="text-muted-foreground line-through">
+                        {selectedGame.price} ₽
+                      </span>
+                    )}
+                    <span className="text-2xl font-bold text-primary">
+                      {selectedGame.price === 0 
+                        ? 'БЕСПЛАТНО' 
+                        : `${selectedGame.price - (selectedGame.price * selectedGame.discount / 100)} ₽`
+                      }
+                    </span>
+                  </div>
+                </div>
+                <div className="flex justify-between items-center pt-2 border-t border-border">
+                  <span className="text-muted-foreground">Ваш баланс:</span>
+                  <span className="text-xl font-bold">{balance} ₽</span>
+                </div>
+                {selectedGame.price > 0 && (
+                  <div className="flex justify-between items-center pt-2 border-t border-border mt-2">
+                    <span className="font-semibold">Остаток после покупки:</span>
+                    <span className="text-xl font-bold text-secondary">
+                      {balance - (selectedGame.price - (selectedGame.price * selectedGame.discount / 100))} ₽
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {selectedGame.price > 0 && balance < (selectedGame.price - (selectedGame.price * selectedGame.discount / 100)) && (
+                <div className="p-4 bg-destructive/10 border border-destructive rounded-lg flex items-start gap-3">
+                  <Icon name="AlertCircle" size={20} className="text-destructive mt-0.5" />
+                  <div className="text-sm">
+                    <p className="font-semibold text-destructive">Недостаточно средств</p>
+                    <p className="text-muted-foreground mt-1">
+                      Пополните баланс на {(selectedGame.price - (selectedGame.price * selectedGame.discount / 100)) - balance} ₽
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex gap-3 pt-2">
+                <Button 
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={() => setBuyDialogOpen(false)}
+                >
+                  Отмена
+                </Button>
+                <Button 
+                  className="flex-1"
+                  onClick={confirmBuyGame}
+                  disabled={selectedGame.price > 0 && balance < (selectedGame.price - (selectedGame.price * selectedGame.discount / 100))}
+                >
+                  <Icon name="ShoppingCart" size={18} className="mr-2" />
+                  {selectedGame.price === 0 ? 'Получить бесплатно' : 'Купить сейчас'}
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
