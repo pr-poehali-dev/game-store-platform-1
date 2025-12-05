@@ -10,12 +10,84 @@ import { toast } from 'sonner';
 import Icon from '@/components/ui/icon';
 
 const GAMES = [
-  { id: 1, title: 'Cyber Nexus 2077', genre: 'RPG', price: 2499, rating: 9.5, discount: 30, image: '🎮', description: 'Футуристическая RPG в неоновом мегаполисе' },
-  { id: 2, title: 'Shadow Legends', genre: 'Action', price: 1999, rating: 9.2, discount: 0, image: '⚔️', description: 'Эпическая боевая система' },
-  { id: 3, title: 'Space Frontier', genre: 'Strategy', price: 1499, rating: 8.8, discount: 50, image: '🚀', description: 'Покоряй галактику' },
-  { id: 4, title: 'Racing Velocity', genre: 'Racing', price: 999, rating: 8.5, discount: 25, image: '🏎️', description: 'Гонки на скорости света' },
-  { id: 5, title: 'Mystery Manor', genre: 'Adventure', price: 799, rating: 9.0, discount: 0, image: '🏰', description: 'Разгадай тайну старого поместья' },
-  { id: 6, title: 'Battle Royale Pro', genre: 'Shooter', price: 0, rating: 8.9, discount: 0, image: '🎯', description: 'Free-to-play королевская битва' },
+  { 
+    id: 1, 
+    title: 'Cyber Nexus 2077', 
+    genre: 'RPG', 
+    price: 2499, 
+    rating: 9.5, 
+    discount: 30, 
+    image: '🎮', 
+    description: 'Футуристическая RPG в неоновом мегаполисе',
+    videoUrl: 'https://www.youtube.com/embed/8X2kIfS6fb8',
+    features: ['Открытый мир', 'Кастомизация персонажа', '50+ часов геймплея', 'Кинематографичный сюжет'],
+    systemReq: 'Windows 10, 16GB RAM, GTX 1060'
+  },
+  { 
+    id: 2, 
+    title: 'Shadow Legends', 
+    genre: 'Action', 
+    price: 1999, 
+    rating: 9.2, 
+    discount: 0, 
+    image: '⚔️', 
+    description: 'Эпическая боевая система',
+    videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+    features: ['Динамичные бои', 'Онлайн кооператив', '100+ видов оружия', 'PvP арена'],
+    systemReq: 'Windows 10, 8GB RAM, GTX 960'
+  },
+  { 
+    id: 3, 
+    title: 'Space Frontier', 
+    genre: 'Strategy', 
+    price: 1499, 
+    rating: 8.8, 
+    discount: 50, 
+    image: '🚀', 
+    description: 'Покоряй галактику',
+    videoUrl: 'https://www.youtube.com/embed/jfKfPfyJRdk',
+    features: ['Строй космические базы', '4X стратегия', 'Дипломатия', 'Исследование галактики'],
+    systemReq: 'Windows 10, 4GB RAM, GTX 750'
+  },
+  { 
+    id: 4, 
+    title: 'Racing Velocity', 
+    genre: 'Racing', 
+    price: 999, 
+    rating: 8.5, 
+    discount: 25, 
+    image: '🏎️', 
+    description: 'Гонки на скорости света',
+    videoUrl: 'https://www.youtube.com/embed/3AtDnEC4zak',
+    features: ['Реалистичная физика', '50+ автомобилей', 'Онлайн гонки', 'Карьерный режим'],
+    systemReq: 'Windows 10, 8GB RAM, GTX 1050'
+  },
+  { 
+    id: 5, 
+    title: 'Mystery Manor', 
+    genre: 'Adventure', 
+    price: 799, 
+    rating: 9.0, 
+    discount: 0, 
+    image: '🏰', 
+    description: 'Разгадай тайну старого поместья',
+    videoUrl: 'https://www.youtube.com/embed/EngW7tLk6R8',
+    features: ['Детективный сюжет', 'Головоломки', 'Множество концовок', 'Атмосферный саундтрек'],
+    systemReq: 'Windows 10, 4GB RAM, GTX 660'
+  },
+  { 
+    id: 6, 
+    title: 'Battle Royale Pro', 
+    genre: 'Shooter', 
+    price: 0, 
+    rating: 8.9, 
+    discount: 0, 
+    image: '🎯', 
+    description: 'Free-to-play королевская битва',
+    videoUrl: 'https://www.youtube.com/embed/WBAG0RtW7wM',
+    features: ['100 игроков онлайн', 'Огромная карта', 'Сезонный контент', 'Кросс-платформа'],
+    systemReq: 'Windows 10, 8GB RAM, GTX 970'
+  },
 ];
 
 const PROMO_CODES = [
@@ -39,6 +111,8 @@ export default function Index() {
   const [chatInput, setChatInput] = useState('');
   const [buyDialogOpen, setBuyDialogOpen] = useState(false);
   const [selectedGame, setSelectedGame] = useState<typeof GAMES[0] | null>(null);
+  const [gameDetailsOpen, setGameDetailsOpen] = useState(false);
+  const [viewingGame, setViewingGame] = useState<typeof GAMES[0] | null>(null);
 
   const filteredGames = GAMES.filter(game => {
     const matchesGenre = selectedGenre === 'all' || game.genre === selectedGenre;
@@ -100,6 +174,11 @@ export default function Index() {
       }, 1000);
       setChatInput('');
     }
+  };
+
+  const handleViewGame = (game: typeof GAMES[0]) => {
+    setViewingGame(game);
+    setGameDetailsOpen(true);
   };
 
   return (
@@ -277,28 +356,34 @@ export default function Index() {
               {filteredGames.map((game) => {
                 const finalPrice = game.price - (game.price * game.discount / 100);
                 return (
-                  <Card key={game.id} className="group hover:border-primary transition-all duration-300 overflow-hidden">
-                    <CardHeader className="relative">
-                      <div className="text-6xl mb-4 text-center group-hover:scale-110 transition-transform duration-300">
-                        {game.image}
-                      </div>
-                      {game.discount > 0 && (
-                        <Badge className="absolute top-4 right-4 bg-accent text-accent-foreground animate-glow">
-                          -{game.discount}%
-                        </Badge>
-                      )}
-                      <CardTitle className="text-xl">{game.title}</CardTitle>
-                      <div className="flex items-center gap-2">
-                        <Badge variant="outline">{game.genre}</Badge>
-                        <div className="flex items-center gap-1">
-                          <Icon name="Star" size={16} className="text-yellow-500 fill-yellow-500" />
-                          <span className="text-sm font-bold">{game.rating}</span>
+                  <Card key={game.id} className="group hover:border-primary transition-all duration-300 overflow-hidden cursor-pointer">
+                    <div onClick={() => handleViewGame(game)}>
+                      <CardHeader className="relative">
+                        <div className="text-6xl mb-4 text-center group-hover:scale-110 transition-transform duration-300">
+                          {game.image}
                         </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-muted-foreground">{game.description}</p>
-                    </CardContent>
+                        {game.discount > 0 && (
+                          <Badge className="absolute top-4 right-4 bg-accent text-accent-foreground animate-glow">
+                            -{game.discount}%
+                          </Badge>
+                        )}
+                        <CardTitle className="text-xl">{game.title}</CardTitle>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline">{game.genre}</Badge>
+                          <div className="flex items-center gap-1">
+                            <Icon name="Star" size={16} className="text-yellow-500 fill-yellow-500" />
+                            <span className="text-sm font-bold">{game.rating}</span>
+                          </div>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-sm text-muted-foreground">{game.description}</p>
+                        <Button variant="ghost" size="sm" className="mt-2 w-full">
+                          <Icon name="Info" size={16} className="mr-2" />
+                          Подробнее
+                        </Button>
+                      </CardContent>
+                    </div>
                     <CardFooter className="flex items-center justify-between">
                       <div className="flex flex-col">
                         {game.discount > 0 && (
@@ -315,13 +400,17 @@ export default function Index() {
                           variant="outline"
                           className="group-hover:scale-105 transition-transform"
                           disabled
+                          onClick={(e) => e.stopPropagation()}
                         >
                           <Icon name="Check" size={18} className="mr-2" />
                           Куплено
                         </Button>
                       ) : (
                         <Button 
-                          onClick={() => handleBuyGame(game)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleBuyGame(game);
+                          }}
                           className="group-hover:scale-105 transition-transform"
                         >
                           {game.price === 0 ? 'Играть' : 'Купить'}
@@ -564,6 +653,123 @@ export default function Index() {
                 </Button>
               </div>
             </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={gameDetailsOpen} onOpenChange={setGameDetailsOpen}>
+        <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
+          {viewingGame && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-3">
+                  <span className="text-4xl">{viewingGame.image}</span>
+                  <div className="flex-1">
+                    <div className="text-2xl">{viewingGame.title}</div>
+                    <div className="flex items-center gap-2 mt-2">
+                      <Badge variant="outline">{viewingGame.genre}</Badge>
+                      <div className="flex items-center gap-1">
+                        <Icon name="Star" size={16} className="text-yellow-500 fill-yellow-500" />
+                        <span className="text-sm font-bold">{viewingGame.rating}</span>
+                      </div>
+                      {viewingGame.discount > 0 && (
+                        <Badge className="bg-accent text-accent-foreground">-{viewingGame.discount}%</Badge>
+                      )}
+                    </div>
+                  </div>
+                </DialogTitle>
+              </DialogHeader>
+
+              <div className="space-y-6">
+                <div className="aspect-video w-full bg-muted rounded-lg overflow-hidden">
+                  <iframe
+                    width="100%"
+                    height="100%"
+                    src={viewingGame.videoUrl}
+                    title={`${viewingGame.title} - Трейлер`}
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    className="w-full h-full"
+                  />
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
+                    <Icon name="FileText" size={20} className="text-primary" />
+                    Описание
+                  </h3>
+                  <p className="text-muted-foreground">{viewingGame.description}</p>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                    <Icon name="Sparkles" size={20} className="text-primary" />
+                    Особенности игры
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    {viewingGame.features.map((feature, idx) => (
+                      <div key={idx} className="flex items-center gap-2 p-2 bg-muted rounded">
+                        <Icon name="Check" size={16} className="text-primary" />
+                        <span className="text-sm">{feature}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="p-4 bg-muted rounded-lg">
+                  <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
+                    <Icon name="Monitor" size={20} className="text-primary" />
+                    Системные требования
+                  </h3>
+                  <p className="text-sm text-muted-foreground">{viewingGame.systemReq}</p>
+                </div>
+
+                <div className="p-4 bg-primary/10 rounded-lg border border-primary">
+                  <div className="flex items-center justify-between mb-3">
+                    <div>
+                      <div className="text-sm text-muted-foreground">Цена</div>
+                      <div className="flex items-center gap-2">
+                        {viewingGame.discount > 0 && (
+                          <span className="text-muted-foreground line-through">
+                            {viewingGame.price} ₽
+                          </span>
+                        )}
+                        <span className="text-3xl font-bold text-primary">
+                          {viewingGame.price === 0 
+                            ? 'БЕСПЛАТНО' 
+                            : `${viewingGame.price - (viewingGame.price * viewingGame.discount / 100)} ₽`
+                          }
+                        </span>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm text-muted-foreground">Ваш баланс</div>
+                      <div className="text-2xl font-bold">{balance} ₽</div>
+                    </div>
+                  </div>
+
+                  {ownedGames.includes(viewingGame.id) ? (
+                    <Button className="w-full" size="lg" variant="outline" disabled>
+                      <Icon name="Check" size={20} className="mr-2" />
+                      У вас в библиотеке
+                    </Button>
+                  ) : (
+                    <Button 
+                      className="w-full" 
+                      size="lg"
+                      onClick={() => {
+                        setGameDetailsOpen(false);
+                        handleBuyGame(viewingGame);
+                      }}
+                    >
+                      <Icon name="ShoppingCart" size={20} className="mr-2" />
+                      {viewingGame.price === 0 ? 'Получить бесплатно' : 'Купить игру'}
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </>
           )}
         </DialogContent>
       </Dialog>
